@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ElevatorControlSystem.Domain\ElevatorControlSystem.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
