@@ -7,12 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ElevatorControlSystem.Domain\ElevatorControlSystem.Domain.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="9.0.7" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Interfaces\" />
-    <Folder Include="Services\" />
+    <ProjectReference Include="..\ElevatorControlSystem.Common\ElevatorControlSystem.Common.csproj" />
+    <ProjectReference Include="..\ElevatorControlSystem.Domain\ElevatorControlSystem.Domain.csproj" />
   </ItemGroup>
 
 </Project>

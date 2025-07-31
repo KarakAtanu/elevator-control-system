@@ -1,4 +1,4 @@
-﻿namespace ElevatorControlSystem.Application.Settings
+﻿namespace ElevatorControlSystem.Common.Settings
 {
 	public class ElevatorSettings
 	{

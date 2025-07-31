@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ElevatorControlSystem.Domain\ElevatorControlSystem.Domain.csproj" />
+    <ProjectReference Include="..\ElevatorControlSystem.Service\ElevatorControlSystem.Service.csproj" />
   </ItemGroup>
 
   <ItemGroup>
