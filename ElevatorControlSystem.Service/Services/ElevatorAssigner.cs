@@ -4,6 +4,13 @@ using ElevatorControlSystem.Service.Request;
 
 namespace ElevatorControlSystem.Service.Services
 {
+	/// <summary>
+	/// Provides functionality to find the most suitable elevator and assign an elevator to a given request based on the current 
+	/// state of available elevators.
+	/// </summary>
+	/// <remarks>The <see cref="ElevatorAssigner"/> class evaluates the direction and floor of the elevator request,
+	/// as well as the current state of the elevators, to determine the most suitable elevator to handle the request.
+	/// Elevators that are already moving in the requested direction are prioritized, followed by idle elevators.</remarks>
 	public class ElevatorAssigner : IElevatorAssigner
 	{
 		public IElevatorController? Assign(ElevatorRequest request, IReadOnlyList<IElevatorController> elevatorControllers)

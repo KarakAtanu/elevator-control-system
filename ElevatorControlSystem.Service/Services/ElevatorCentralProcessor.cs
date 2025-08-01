@@ -7,17 +7,26 @@ using Microsoft.Extensions.Options;
 
 namespace ElevatorControlSystem.Service.Services
 {
+	/// <summary>
+	/// Coordinates and manages the operation of multiple elevators, including handling requests, assigning elevators, and
+	/// processing queued tasks.
+	/// </summary>
+	/// <remarks>This class serves as the central processor for an elevator system. It validates incoming requests,
+	/// assigns elevators based on the current state of the system, and processes requests asynchronously. The processor
+	/// uses a background task to handle queued requests and ensures that multiple requests can be processed concurrently
+	/// up to a predefined limit.</remarks>
 	public class ElevatorCentralProcessor : IElevatorCentralProcessor
 	{
+		private const int NUMBER_OF_CONCURRENT_TASKS = 5;
+		
 		private readonly CancellationTokenSource _cts = new();
-		private readonly List<Task> _workers = new();
+		private readonly List<Task> _workers = [];
 		private readonly List<IElevatorController> _elevatorControllers;
 		private readonly ElevatorSettings _settings;
 		private readonly IRequestValidator _validator;
 		private readonly IElevatorAssigner _elevatorAssigner;
 		private readonly IRequestQueueManager _queueManager;
-		private const int NUMBER_OF_TASKS = 5;
-		private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(NUMBER_OF_TASKS);
+		private readonly SemaphoreSlim _semaphore = new(NUMBER_OF_CONCURRENT_TASKS);
 		public ElevatorCentralProcessor(IOptions<ElevatorSettings> options,
 										 IElevatorControllerFactory controllerFactory,
 										 IRequestValidator validator,
@@ -30,18 +39,11 @@ namespace ElevatorControlSystem.Service.Services
 			_queueManager = queueManager;
 			_elevatorControllers = controllerFactory.CreateControllers(_settings);
 
-			// Start a single background task to process requests
 			_workers.Add(Task.Run(() => ProcessQueueAsync(_cts.Token)));
 		}
 
-		public void HandleRequest(ElevatorRequest request, CancellationToken cancellationToken)
+		public void HandleRequest(ElevatorRequest request)
 		{
-			if (cancellationToken.IsCancellationRequested)
-			{
-				_cts.Cancel();
-				return;
-			}
-
 			if (!_validator.IsValid(request))
 			{
 				Console.WriteLine("Invalid elevator request.");
@@ -58,6 +60,7 @@ namespace ElevatorControlSystem.Service.Services
 				if (_queueManager.TryDequeue(out var request))
 				{
 					await _semaphore.WaitAsync(cancellationToken);
+
 					_ = Task.Run(async () =>
 					{
 						try
@@ -82,13 +85,13 @@ namespace ElevatorControlSystem.Service.Services
 				return;
 			}
 
-			Console.WriteLine($"[Elevator {elevator.Id}] assigned for request: [{request.Floor}] -> [{request.DestinationFloor}] -> [{request.Direction}]");
-			var floorRequests = GenerateFloorRequests(request, elevator);
-
-			await elevator.AddFloorRequestAsync(floorRequests, cancellationToken);
+			Console.WriteLine($"[Elevator {elevator.Id}] Assigned for Request: [{request.Floor}] -> [{request.DestinationFloor}] -> [{request.Direction}]");
+			
+			var internalRequests = GenerateInternalRequestsForController(request, elevator);
+			await elevator.AddFloorRequestAsync(internalRequests, cancellationToken);
 		}
 
-		private static List<ElevatorControllerRequest> GenerateFloorRequests(ElevatorRequest request, IElevatorController elevator) =>
+		private static List<ElevatorControllerRequest> GenerateInternalRequestsForController(ElevatorRequest request, IElevatorController elevator) =>
 					[
 						new()
 						{

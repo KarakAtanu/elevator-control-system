@@ -4,6 +4,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace ElevatorControlSystem.Service.Services
 {
+	/// <summary>
+	/// Provides methods to create and configure instances of <see cref="IElevatorController"/>  based on the specified
+	/// elevator settings.
+	/// </summary>
+	/// <remarks>This factory leverages dependency injection to resolve required services for creating  elevator
+	/// controllers, such as floor request queue management, movement services, and door services.</remarks>
 	public class ElevatorControllerFactory : IElevatorControllerFactory
 	{
 		private readonly IServiceProvider _serviceProvider;

@@ -28,54 +28,16 @@ services.AddTransient<IElevatorDoorService, ElevatorDoorService>();
 
 
 var serviceProvider = services.BuildServiceProvider();
-var requestProcessor = serviceProvider.GetRequiredService<IElevatorCentralProcessor>();
+var simulator = serviceProvider.GetRequiredService<IElevatorRequestSimulator>();
 var tokenSource = new CancellationTokenSource();
 
-requestProcessor.HandleRequest(new ElevatorControlSystem.Service.Request.ElevatorRequest
+Console.CancelKeyPress += (s, e) =>
 {
-	DestinationFloor = 9,
-	Direction = ElevatorControlSystem.Domain.Models.Enums.Direction.Up,
-	Floor = 0
-}, tokenSource.Token);
+	e.Cancel = true;
+	tokenSource.Cancel();
+};
 
-Thread.Sleep(4000);
+Console.WriteLine("Elevator simulation started. Press Ctrl+C to exit.");
 
-requestProcessor.HandleRequest(new ElevatorControlSystem.Service.Request.ElevatorRequest
-{
-	DestinationFloor = 1,
-	Direction = ElevatorControlSystem.Domain.Models.Enums.Direction.Down,
-	Floor = 6
-}, tokenSource.Token);
-
-Thread.Sleep(3000);
-requestProcessor.HandleRequest(new ElevatorControlSystem.Service.Request.ElevatorRequest
-{
-	DestinationFloor = 5,
-	Direction = ElevatorControlSystem.Domain.Models.Enums.Direction.Down,
-	Floor = 3
-}, tokenSource.Token);
-
-Thread.Sleep(10000);
-requestProcessor.HandleRequest(new ElevatorControlSystem.Service.Request.ElevatorRequest
-{
-	DestinationFloor = 7,
-	Direction = ElevatorControlSystem.Domain.Models.Enums.Direction.Up,
-	Floor = 3
-}, tokenSource.Token);
-
-Thread.Sleep(10000);
-
-requestProcessor.HandleRequest(new ElevatorControlSystem.Service.Request.ElevatorRequest
-{
-	DestinationFloor = 3,
-	Direction = ElevatorControlSystem.Domain.Models.Enums.Direction.Down,
-	Floor = 8
-}, tokenSource.Token);
-
-Console.WriteLine("Completed...");
-
-
-//t1 = controller.AddFloorRequestAsync(3, tokenSource.Token);
-//await t1;
-//Console.WriteLine("Done...");
+await simulator.RunAsync(tokenSource.Token);
 Console.ReadLine();

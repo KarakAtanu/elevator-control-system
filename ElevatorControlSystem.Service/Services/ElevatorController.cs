@@ -1,11 +1,21 @@
-﻿using ElevatorControlSystem.Domain.Models;
+﻿using ElevatorControlSystem.Common.Settings;
+using ElevatorControlSystem.Domain.Models;
 using ElevatorControlSystem.Domain.Models.Enums;
 using ElevatorControlSystem.Service.Interfaces;
+using Microsoft.Extensions.Options;
 
 namespace ElevatorControlSystem.Service.Services
 {
+	/// <summary>
+	/// Manages the operation of an elevator, including handling floor requests, controlling movement, and managing door
+	/// operations.
+	/// </summary>
+	/// <remarks>This class coordinates the behavior of an elevator by processing floor requests, determining the
+	/// direction of movement, and interacting with services for movement and door control. It ensures that the elevator
+	/// operates efficiently and handles requests in the correct order.</remarks>
 	public class ElevatorController : IElevatorController
 	{
+		private readonly ElevatorSettings _elevatorSettings;
 		private readonly Elevator _elevator;
 		private readonly IFloorRequestQueueManager _queueManager;
 		private readonly IElevatorMovementService _movementService;
@@ -21,13 +31,13 @@ namespace ElevatorControlSystem.Service.Services
 		public Direction Direction => _elevator.Direction;
 
 		public ElevatorController(int id,
-							int minFloor,
-							int maxFloor,
+							IOptions<ElevatorSettings> options,
 							IFloorRequestQueueManager queueManager,
 							IElevatorMovementService movementService,
 							IElevatorDoorService doorService)
 		{
-			_elevator = Elevator.Create(id, minFloor, maxFloor);
+			_elevatorSettings = options.Value;
+			_elevator = Elevator.Create(id, _elevatorSettings.MinFloor, _elevatorSettings.MaxFloor);
 			_queueManager = queueManager;
 			_movementService = movementService;
 			_doorService = doorService;
@@ -91,7 +101,7 @@ namespace ElevatorControlSystem.Service.Services
 				MoveElevator();
 			}
 
-			await Task.Delay(2000, cancellationToken);
+			await Task.Delay(_elevatorSettings.BetweenFloorsDelay, cancellationToken);
 		}
 
 		private void UpdateDirectionAndDestination()
@@ -157,7 +167,7 @@ namespace ElevatorControlSystem.Service.Services
 		{
 			if (!_isDoorOpened)
 			{
-				await _doorService.OpenDoorsAsync(_elevator, cancellationToken);
+				await _doorService.OpenDoorsAsync(_elevator, _elevatorSettings.DoorsOpenCloseDelay, cancellationToken);
 				_isDoorOpened = true;
 			}
 

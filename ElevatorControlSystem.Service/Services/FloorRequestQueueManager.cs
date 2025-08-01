@@ -3,6 +3,12 @@ using ElevatorControlSystem.Service.Interfaces;
 
 namespace ElevatorControlSystem.Service.Services
 {
+	/// <summary>
+	/// Manages floor requests for an elevator system, maintaining separate queues for upward and downward requests.
+	/// </summary>
+	/// <remarks>This class provides thread-safe methods to add, retrieve, and remove floor requests for both upward
+	/// and downward directions. It ensures that requests are processed in an ordered manner, with upward requests
+	/// prioritized by the lowest floor and downward requests prioritized by the highest floor.</remarks>
 	public class FloorRequestQueueManager : IFloorRequestQueueManager
 	{
 		private readonly SortedSet<int> _up = [];
