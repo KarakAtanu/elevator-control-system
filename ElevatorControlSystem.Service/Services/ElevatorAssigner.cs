@@ -22,31 +22,37 @@ namespace ElevatorControlSystem.Service.Services
 			return candidates.FirstOrDefault();
 		}
 
-		private IEnumerable<IElevatorController> FindDownwardElevators(ElevatorRequest request, IReadOnlyList<IElevatorController> elevatorControllers)
+		private static IEnumerable<IElevatorController> FindDownwardElevators(ElevatorRequest request,
+																		IReadOnlyList<IElevatorController> elevatorControllers)
 		{
 			IEnumerable<IElevatorController> candidates = elevatorControllers
 								.Where(e => e.Direction == Direction.Down && e.CurrentFloor >= request.Floor)
 								.OrderBy(e => e.CurrentFloor - request.Floor);
+
 			if (!candidates.Any())
 			{
-				candidates = elevatorControllers
-					.Where(e => e.Direction == Direction.Idle)
-					.OrderBy(e => Math.Abs(request.Floor - e.CurrentFloor));
+				candidates = GetIdleElevators(request, elevatorControllers);
 			}
 
 			return candidates;
 		}
 
-		private IEnumerable<IElevatorController> FindUpwardElevators(ElevatorRequest request, IReadOnlyList<IElevatorController> elevatorControllers)
+		private static IEnumerable<IElevatorController> GetIdleElevators(ElevatorRequest request,
+																   IReadOnlyList<IElevatorController> elevatorControllers) => 
+							elevatorControllers
+							.Where(e => e.Direction == Direction.Idle)
+							.OrderBy(e => Math.Abs(request.Floor - e.CurrentFloor));
+
+		private static IEnumerable<IElevatorController> FindUpwardElevators(ElevatorRequest request,
+																	  IReadOnlyList<IElevatorController> elevatorControllers)
 		{
 			IEnumerable<IElevatorController> candidates = elevatorControllers
 								.Where(e => e.Direction == Direction.Up && e.CurrentFloor <= request.Floor)
 								.OrderBy(e => request.Floor - e.CurrentFloor);
+
 			if (!candidates.Any())
 			{
-				candidates = elevatorControllers
-					.Where(e => e.Direction == Direction.Idle)
-					.OrderBy(e => Math.Abs(request.Floor - e.CurrentFloor));
+				candidates = GetIdleElevators(request, elevatorControllers);
 			}
 
 			return candidates;

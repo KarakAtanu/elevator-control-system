@@ -7,176 +7,209 @@ namespace ElevatorControlSystem.Service.Services
 	public class ElevatorController : IElevatorController
 	{
 		private readonly Elevator _elevator;
+		private readonly IFloorRequestQueueManager _queueManager;
+		private readonly IElevatorMovementService _movementService;
+		private readonly IElevatorDoorService _doorService;
 		private readonly object _lock = new();
 		private bool _isRunning = false;
 		private bool _isDoorOpened = false;
 		private int _destinationFloor = -1;
 
-		private readonly SortedSet<int> _movingUpDestinationFloors = new();
-		private readonly SortedSet<int> _movingDownDestinationFloors = new();
-
 		public bool IsIdle => _elevator.Direction == Direction.Idle;
 		public int CurrentFloor => _elevator.CurrentFloor;
 		public int Id => _elevator.Id;
 		public Direction Direction => _elevator.Direction;
-		public ElevatorController(int id, int minFloor, int maxFloor)
+
+		public ElevatorController(int id,
+							int minFloor,
+							int maxFloor,
+							IFloorRequestQueueManager queueManager,
+							IElevatorMovementService movementService,
+							IElevatorDoorService doorService)
 		{
-			_elevator = new Elevator(id, minFloor, maxFloor);
+			_elevator = Elevator.Create(id, minFloor, maxFloor);
+			_queueManager = queueManager;
+			_movementService = movementService;
+			_doorService = doorService;
 		}
 
 		public async Task AddFloorRequestAsync(IReadOnlyList<ElevatorControllerRequest> floorRequests, CancellationToken cancellationToken)
 		{
-			lock (_lock)
-			{
-				foreach (var floorRequest in floorRequests)
-				{
-					if (floorRequest.Direction == Direction.Up)
-					{
-						_movingUpDestinationFloors.Add(floorRequest.Floor);
-					}
-					else
-					{
-						_movingDownDestinationFloors.Add(floorRequest.Floor);
-					}
-				}
-			}
-
-			if (_elevator.Direction == Direction.Idle)
-			{
-				_elevator.Direction = floorRequests[0].Direction;
-			}
+			AddRequestsToQueue(floorRequests);
+			SetInitialElevatorDirection(floorRequests);
 
 			if (!_isRunning)
 			{
 				_isRunning = true;
 				await RunElevatorAsync(cancellationToken);
 			}
+		}
 
+		private void AddRequestsToQueue(IReadOnlyList<ElevatorControllerRequest> floorRequests)
+		{
+			foreach (var request in floorRequests)
+			{
+				_queueManager.AddRequest(request.Floor, request.Direction);
+			}
+		}
+
+		private void SetInitialElevatorDirection(IReadOnlyList<ElevatorControllerRequest> floorRequests)
+		{
+			if (_elevator.Direction == Direction.Idle && floorRequests.Count > 0)
+			{
+				_elevator.Direction = floorRequests[0].Direction;
+			}
 		}
 
 		private async Task RunElevatorAsync(CancellationToken cancellationToken)
 		{
-			while (true)
+			while (!cancellationToken.IsCancellationRequested)
 			{
-				if (cancellationToken.IsCancellationRequested)
-				{
-					_isRunning = false;
-					_isDoorOpened = false;
-					return;
-				}
-
-				await TransitionBetweenFloorsAsync(cancellationToken);
+				await ProcessElevatorStepAsync(cancellationToken);
 			}
+			ResetElevatorState();
 		}
 
-		private void SetElevatorDirectionAndDestinationFloor()
+		private async Task ProcessElevatorStepAsync(CancellationToken cancellationToken)
 		{
-			if (_elevator.Direction == Direction.Up)
+			lock (_lock)
 			{
-				if (_movingUpDestinationFloors.Count == 0)
-				{
-					if (_movingDownDestinationFloors.Count > 0)
-					{
-						_elevator.Direction = Direction.Down;
-						_destinationFloor = _movingDownDestinationFloors.Last();
-					}
-					else
-					{
-						_elevator.Direction = Direction.Idle;
-						_destinationFloor = -1;
-					}
-				}
-				else
-				{
-					_destinationFloor = _movingUpDestinationFloors.First();
-				}
+				UpdateDirectionAndDestination();
 			}
-			else
-			{
-				if (_movingDownDestinationFloors.Count == 0)
-				{
-					if (_movingUpDestinationFloors.Count > 0)
-					{
-						_elevator.Direction = Direction.Up;
-						_destinationFloor = _movingUpDestinationFloors.First();
-					}
-					else
-					{
-						_elevator.Direction = Direction.Idle;
-						_destinationFloor = -1;
-					}
-				}
-				else
-				{
-					_destinationFloor = _movingDownDestinationFloors.Last();
-				}
-			}
-		}
 
-		private async Task TransitionBetweenFloorsAsync(CancellationToken cancellationToken)
-		{
-			if (cancellationToken.IsCancellationRequested)
+			if (_elevator.Direction == Direction.Idle)
 			{
 				return;
 			}
 
-			lock (_lock)
+			if (IsAtDestinationFloor())
 			{
-				SetElevatorDirectionAndDestinationFloor();
+				await HandleArrivalAtDestinationAsync(cancellationToken);
+			}
+			else
+			{
+				MoveElevator();
 			}
 
-			if (_elevator.Direction != Direction.Idle)
+			await Task.Delay(2000, cancellationToken);
+		}
+
+		private void UpdateDirectionAndDestination()
+		{
+			switch (_elevator.Direction)
 			{
-				if (_elevator.CurrentFloor == _destinationFloor)
-				{
-					if (!_isDoorOpened)
-					{
-						await OpenElevatorDoorsAsync(cancellationToken);
-					}
-
-					lock (_lock)
-					{
-						if (_elevator.Direction == Direction.Up)
-						{
-							_movingUpDestinationFloors.Remove(_destinationFloor);
-							if(_movingUpDestinationFloors.Count == 0)
-							{
-								_elevator.Direction = _movingDownDestinationFloors.Count == 0 ? Direction.Idle : Direction.Down;
-							}
-						}
-
-						if (_elevator.Direction == Direction.Down)
-						{
-							_movingDownDestinationFloors.Remove(_destinationFloor);
-							if (_movingDownDestinationFloors.Count == 0)
-							{
-								_elevator.Direction = _movingUpDestinationFloors.Count == 0 ? Direction.Idle : Direction.Up;
-							}
-						}
-					}
-				}
-
-				if (_elevator.Direction == Direction.Down)
-				{
-					_elevator.CurrentFloor--;
-					Console.WriteLine($"[Elevator {_elevator.Id}] Moving Down to floor {CurrentFloor}");
-				}
-				
-				if( _elevator.Direction == Direction.Up)
-				{
-					_elevator.CurrentFloor++;
-					Console.WriteLine($"[Elevator {_elevator.Id}] Moving Up to floor {CurrentFloor}");
-				}
-
-				await Task.Delay(2000, cancellationToken);
+				case Direction.Up:
+					HandleUpDirection();
+					break;
+				case Direction.Down:
+					HandleDownDirection();
+					break;
+				default:
+					break;
 			}
 		}
 
-		private async Task OpenElevatorDoorsAsync(CancellationToken cancellationToken)
+		private void HandleUpDirection()
 		{
-			Console.WriteLine($"[Elevator {_elevator.Id}] At floor {CurrentFloor} - Doors are opening");
-			await Task.Delay(2000, cancellationToken); // Simulate door open time
-			Console.WriteLine($"[Elevator {_elevator.Id}] At floor {CurrentFloor} - Doors are closing");
+			if (!_queueManager.HasUpRequests())
+			{
+				if (_queueManager.HasDownRequests())
+				{
+					_elevator.Direction = Direction.Down;
+					_destinationFloor = _queueManager.GetNextDown() ?? -1;
+				}
+				else
+				{
+					_elevator.Direction = Direction.Idle;
+					_destinationFloor = -1;
+				}
+			}
+			else
+			{
+				_destinationFloor = _queueManager.GetNextUp() ?? -1;
+			}
+		}
+
+		private void HandleDownDirection()
+		{
+			if (!_queueManager.HasDownRequests())
+			{
+				if (_queueManager.HasUpRequests())
+				{
+					_elevator.Direction = Direction.Up;
+					_destinationFloor = _queueManager.GetNextUp() ?? -1;
+				}
+				else
+				{
+					_elevator.Direction = Direction.Idle;
+					_destinationFloor = -1;
+				}
+			}
+			else
+			{
+				_destinationFloor = _queueManager.GetNextDown() ?? -1;
+			}
+		}
+
+		private bool IsAtDestinationFloor() => _elevator.CurrentFloor == _destinationFloor;
+
+		private async Task HandleArrivalAtDestinationAsync(CancellationToken cancellationToken)
+		{
+			if (!_isDoorOpened)
+			{
+				await _doorService.OpenDoorsAsync(_elevator, cancellationToken);
+				_isDoorOpened = true;
+			}
+
+			lock (_lock)
+			{
+				RemoveCurrentFloorRequest();
+				UpdateDirectionAfterStop();
+			}
+		}
+
+		private void RemoveCurrentFloorRequest()
+		{
+			if (_elevator.Direction == Direction.Up)
+			{
+				_queueManager.RemoveUp(_destinationFloor);
+			}
+			else if (_elevator.Direction == Direction.Down)
+			{
+				_queueManager.RemoveDown(_destinationFloor);
+			}
+		}
+
+		private void UpdateDirectionAfterStop()
+		{
+			if (_elevator.Direction == Direction.Up && !_queueManager.HasUpRequests())
+			{
+				_elevator.Direction = _queueManager.HasDownRequests() ? Direction.Down : Direction.Idle;
+			}
+			else if (_elevator.Direction == Direction.Down && !_queueManager.HasDownRequests())
+			{
+				_elevator.Direction = _queueManager.HasUpRequests() ? Direction.Up : Direction.Idle;
+			}
+		}
+
+		private void MoveElevator()
+		{
+			if (_elevator.Direction == Direction.Up)
+			{
+				_movementService.MoveUp(_elevator);
+				_isDoorOpened = false;
+			}
+			else if (_elevator.Direction == Direction.Down)
+			{
+				_movementService.MoveDown(_elevator);
+				_isDoorOpened = false;
+			}
+		}
+
+		private void ResetElevatorState()
+		{
+			_isRunning = false;
+			_isDoorOpened = false;
 		}
 	}
 }

@@ -2,7 +2,7 @@
 
 namespace ElevatorControlSystem.Service.Interfaces
 {
-	public interface IElevatorCentralRequestProcessor
+	public interface IElevatorCentralProcessor
 	{
 		void HandleRequest(ElevatorRequest request, CancellationToken cancellationToken);
 	}

@@ -1,4 +1,6 @@
 ﻿using ElevatorControlSystem.Common.Settings;
+using ElevatorControlSystem.Infrastructure.Interfaces;
+using ElevatorControlSystem.Infrastructure.Services;
 using ElevatorControlSystem.Service.Interfaces;
 using ElevatorControlSystem.Service.Services;
 using Microsoft.Extensions.Configuration;
@@ -12,15 +14,21 @@ var configuration = new ConfigurationBuilder()
 	.Build();
 
 services.Configure<ElevatorSettings>(configuration.GetSection(nameof(ElevatorSettings)));
-services.AddScoped<IRequestQueueManager, RequestQueueManager>();
+
+services.AddSingleton<IElevatorCentralProcessor, ElevatorCentralProcessor>();
+services.AddSingleton<IElevatorRequestSimulator, ElevatorRequestSimulator>();
 services.AddScoped<IElevatorController, ElevatorController>();
-services.AddScoped<IElevatorControllerFactory, ElevatorControllerFactory>();
-services.AddScoped<IElevatorAssigner, ElevatorAssigner>();
-services.AddScoped<IRequestValidator, RequestValidator>();
-services.AddScoped<IElevatorCentralRequestProcessor, ElevatorCentralRequestProcessor>();
+services.AddScoped<IRequestQueueManager, RequestQueueManager>();
+services.AddTransient<IElevatorControllerFactory, ElevatorControllerFactory>();
+services.AddTransient<IElevatorAssigner, ElevatorAssigner>();
+services.AddTransient<IRequestValidator, RequestValidator>();
+services.AddTransient<IFloorRequestQueueManager, FloorRequestQueueManager>();
+services.AddTransient<IElevatorMovementService, ElevatorMovementService>();
+services.AddTransient<IElevatorDoorService, ElevatorDoorService>();
+
 
 var serviceProvider = services.BuildServiceProvider();
-var requestProcessor = serviceProvider.GetRequiredService<IElevatorCentralRequestProcessor>();
+var requestProcessor = serviceProvider.GetRequiredService<IElevatorCentralProcessor>();
 var tokenSource = new CancellationTokenSource();
 
 requestProcessor.HandleRequest(new ElevatorControlSystem.Service.Request.ElevatorRequest

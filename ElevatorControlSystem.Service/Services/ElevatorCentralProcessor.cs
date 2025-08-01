@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 
 namespace ElevatorControlSystem.Service.Services
 {
-	public class ElevatorCentralRequestProcessor : IElevatorCentralRequestProcessor
+	public class ElevatorCentralProcessor : IElevatorCentralProcessor
 	{
 		private readonly CancellationTokenSource _cts = new();
 		private readonly List<Task> _workers = new();
@@ -18,7 +18,7 @@ namespace ElevatorControlSystem.Service.Services
 		private readonly IRequestQueueManager _queueManager;
 		private const int NUMBER_OF_TASKS = 5;
 		private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(NUMBER_OF_TASKS);
-		public ElevatorCentralRequestProcessor(IOptions<ElevatorSettings> options,
+		public ElevatorCentralProcessor(IOptions<ElevatorSettings> options,
 										 IElevatorControllerFactory controllerFactory,
 										 IRequestValidator validator,
 										 IElevatorAssigner elevatorAssigner,
@@ -83,12 +83,12 @@ namespace ElevatorControlSystem.Service.Services
 			}
 
 			Console.WriteLine($"[Elevator {elevator.Id}] assigned for request: [{request.Floor}] -> [{request.DestinationFloor}] -> [{request.Direction}]");
-			var floorRequests = GenerateFloorRequestList(request, elevator);
+			var floorRequests = GenerateFloorRequests(request, elevator);
 
 			await elevator.AddFloorRequestAsync(floorRequests, cancellationToken);
 		}
 
-		private static List<ElevatorControllerRequest> GenerateFloorRequestList(ElevatorRequest request, IElevatorController elevator) =>
+		private static List<ElevatorControllerRequest> GenerateFloorRequests(ElevatorRequest request, IElevatorController elevator) =>
 					[
 						new()
 						{

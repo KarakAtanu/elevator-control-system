@@ -10,7 +10,7 @@ namespace ElevatorControlSystem.Domain.Models
 		public Direction Direction { get; set; }
 		public int CurrentFloor { get; set; }
 
-		public Elevator(int id, int minFloor, int maxFloor)
+		private Elevator(int id, int minFloor, int maxFloor)
 		{
 			Id = id;
 			MinFloor = minFloor;
@@ -19,5 +19,16 @@ namespace ElevatorControlSystem.Domain.Models
 			Direction = Direction.Idle;
 		}
 
+		public static Elevator Create(int id, int minFloor, int maxFloor)
+		{
+			return new Elevator(id, minFloor, maxFloor)
+			{
+				Id = id,
+				MinFloor = minFloor,
+				MaxFloor = maxFloor,
+				CurrentFloor = minFloor,
+				Direction = Direction.Idle,
+			};
+		}
 	}	
 }
