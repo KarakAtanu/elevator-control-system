@@ -3,7 +3,6 @@ using ElevatorControlSystem.Common.Settings;
 using ElevatorControlSystem.Domain.Models;
 using ElevatorControlSystem.Domain.Models.Enums;
 using ElevatorControlSystem.Service.Interfaces;
-using ElevatorControlSystem.Service.Request;
 using ElevatorControlSystem.Service.Services;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -114,7 +113,8 @@ namespace ElevatorControlSystem.Tests.Service
 
 			// Assert
 			assignerMock.Verify(a => a.Assign(request, It.IsAny<IReadOnlyList<IElevatorController>>()), Times.AtLeastOnce);
-			consoleWriterMock.Verify(c => c.Write(It.Is<string>(s => s.Contains(ASSIGNMENT_FOR_REQUEST)), 1), Times.AtLeastOnce);
+			consoleWriterMock.Verify(c => c.Write(It.Is<string>(s => s.Contains(ASSIGNMENT_FOR_REQUEST
+				)), 1), Times.AtLeastOnce);
 			elevatorMock.Verify(e => e.AddFloorRequestAsync(It.IsAny<IReadOnlyList<ElevatorControllerRequest>>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
 		}
 	}

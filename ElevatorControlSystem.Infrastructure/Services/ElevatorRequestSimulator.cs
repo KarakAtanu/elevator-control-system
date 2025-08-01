@@ -1,9 +1,9 @@
 ﻿using ElevatorControlSystem.Common.Interfaces;
 using ElevatorControlSystem.Common.Settings;
+using ElevatorControlSystem.Domain.Models;
 using ElevatorControlSystem.Domain.Models.Enums;
 using ElevatorControlSystem.Infrastructure.Interfaces;
 using ElevatorControlSystem.Service.Interfaces;
-using ElevatorControlSystem.Service.Request;
 using Microsoft.Extensions.Options;
 
 namespace ElevatorControlSystem.Infrastructure.Services

@@ -1,6 +1,6 @@
-﻿using ElevatorControlSystem.Domain.Models.Enums;
+﻿using ElevatorControlSystem.Domain.Models;
+using ElevatorControlSystem.Domain.Models.Enums;
 using ElevatorControlSystem.Service.Interfaces;
-using ElevatorControlSystem.Service.Request;
 
 namespace ElevatorControlSystem.Service.Services
 {

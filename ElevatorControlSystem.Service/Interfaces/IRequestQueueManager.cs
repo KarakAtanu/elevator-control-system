@@ -1,4 +1,4 @@
-﻿using ElevatorControlSystem.Service.Request;
+﻿using ElevatorControlSystem.Domain.Models;
 
 namespace ElevatorControlSystem.Service.Interfaces
 {

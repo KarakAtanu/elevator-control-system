@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
+using ElevatorControlSystem.Domain.Models;
 using ElevatorControlSystem.Service.Interfaces;
-using ElevatorControlSystem.Service.Request;
 
 namespace ElevatorControlSystem.Service.Services
 {

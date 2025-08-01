@@ -1,6 +1,6 @@
 ﻿using ElevatorControlSystem.Domain.Models.Enums;
 
-namespace ElevatorControlSystem.Service.Request
+namespace ElevatorControlSystem.Domain.Models
 {
 	public class ElevatorRequest
 	{
