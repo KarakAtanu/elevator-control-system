@@ -5,10 +5,6 @@ using ElevatorControlSystem.Service.Interfaces;
 using ElevatorControlSystem.Service.Services;
 using Microsoft.Extensions.Options;
 using Moq;
-using Xunit;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ElevatorControlSystem.Tests.Service
 {

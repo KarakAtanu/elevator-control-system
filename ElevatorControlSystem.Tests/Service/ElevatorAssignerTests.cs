@@ -4,7 +4,7 @@ using ElevatorControlSystem.Service.Request;
 using ElevatorControlSystem.Service.Services;
 using Moq;
 
-namespace ElevatorControlSystem.Service.Tests.Services
+namespace ElevatorControlSystem.Tests.Service
 {
 	public class ElevatorAssignerTests
 	{

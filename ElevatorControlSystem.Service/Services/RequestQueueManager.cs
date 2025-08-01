@@ -20,6 +20,6 @@ namespace ElevatorControlSystem.Service.Services
 		}
 
 		public bool TryDequeue(out ElevatorRequest? request) =>
-			_queue.TryDequeue(out request!);
+			_queue.TryDequeue(out request);
 	}
 }

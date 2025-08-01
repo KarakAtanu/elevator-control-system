@@ -3,7 +3,7 @@ using ElevatorControlSystem.Domain.Models;
 using ElevatorControlSystem.Service.Services;
 using Moq;
 
-namespace ElevatorControlSystem.Service.Tests.Services
+namespace ElevatorControlSystem.Tests.Service
 {
 	public class ElevatorDoorServiceTests
 	{
@@ -14,7 +14,7 @@ namespace ElevatorControlSystem.Service.Tests.Services
 			var mockConsoleWriter = new Mock<IElevatorConsoleWriterService>();
 			var service = new ElevatorDoorService(mockConsoleWriter.Object);
 			var elevator = Elevator.Create(1, 0, 10);
-			int delay = 10;
+			var delay = 10;
 			var cancellationToken = CancellationToken.None;
 
 			// Act
