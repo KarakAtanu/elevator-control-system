@@ -8,6 +8,10 @@ namespace ElevatorControlSystem.Tests.Service
 {
 	public class ElevatorAssignerTests
 	{
+		private const string FIND_UPWARD_ELEVATORS = "FindUpwardElevators";
+		private const string FIND_DOWNWARD_ELEVATORS = "FindDownwardElevators";
+		private const string GET_IDLE_ELEVATORS = "GetIdleElevators";
+
 		private static Mock<IElevatorController> CreateElevator(int id, int floor, Direction direction)
 		{
 			var mock = new Mock<IElevatorController>();
@@ -91,8 +95,8 @@ namespace ElevatorControlSystem.Tests.Service
 
 			// Act
 			var result = typeof(ElevatorAssigner)
-				.GetMethod("FindUpwardElevators", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
-				.Invoke(null, new object[] { request, new[] { elevator1, elevator2, elevator3 } }) as IEnumerable<IElevatorController>;
+				.GetMethod(FIND_UPWARD_ELEVATORS, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+				.Invoke(null, [request, new[] { elevator1, elevator2, elevator3 }]) as IEnumerable<IElevatorController>;
 
 			// Assert
 			Assert.Contains(elevator1, result);
@@ -111,7 +115,7 @@ namespace ElevatorControlSystem.Tests.Service
 
 			// Act
 			var result = typeof(ElevatorAssigner)
-				.GetMethod("FindUpwardElevators", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+				.GetMethod(FIND_UPWARD_ELEVATORS, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
 				.Invoke(null, new object[] { request, new[] { elevator1, elevator2, elevator3 } }) as IEnumerable<IElevatorController>;
 
 			// Assert
@@ -131,8 +135,8 @@ namespace ElevatorControlSystem.Tests.Service
 
 			// Act
 			var result = typeof(ElevatorAssigner)
-				.GetMethod("FindDownwardElevators", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
-				.Invoke(null, new object[] { request, new[] { elevator1, elevator2, elevator3 } }) as IEnumerable<IElevatorController>;
+				.GetMethod(FIND_DOWNWARD_ELEVATORS, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+				.Invoke(null, [request, new[] { elevator1, elevator2, elevator3 }]) as IEnumerable<IElevatorController>;
 
 			// Assert
 			Assert.Contains(elevator1, result);
@@ -151,8 +155,8 @@ namespace ElevatorControlSystem.Tests.Service
 
 			// Act
 			var result = typeof(ElevatorAssigner)
-				.GetMethod("FindDownwardElevators", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
-				.Invoke(null, new object[] { request, new[] { elevator1, elevator2, elevator3 } }) as IEnumerable<IElevatorController>;
+				.GetMethod(FIND_DOWNWARD_ELEVATORS, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+				.Invoke(null, [request, new[] { elevator1, elevator2, elevator3 }]) as IEnumerable<IElevatorController>;
 
 			// Assert
 			Assert.Contains(elevator3, result);
@@ -171,8 +175,8 @@ namespace ElevatorControlSystem.Tests.Service
 
 			// Act
 			var result = typeof(ElevatorAssigner)
-				.GetMethod("GetIdleElevators", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
-				.Invoke(null, new object[] { request, new[] { elevator1, elevator2, elevator3 } }) as IEnumerable<IElevatorController>;
+				.GetMethod(GET_IDLE_ELEVATORS, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+				.Invoke(null, [request, new[] { elevator1, elevator2, elevator3 }]) as IEnumerable<IElevatorController>;
 
 			var ordered = result.ToList();
 

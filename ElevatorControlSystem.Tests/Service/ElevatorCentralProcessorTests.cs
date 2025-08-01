@@ -12,6 +12,8 @@ namespace ElevatorControlSystem.Tests.Service
 {
 	public class ElevatorCentralProcessorTests
 	{
+		const string ASSIGNMENT_FOR_REQUEST = "Assigned for Request";
+
 		private ElevatorCentralProcessor CreateProcessor(
 			Mock<IRequestValidator>? validatorMock = null,
 			Mock<IElevatorAssigner>? assignerMock = null,
@@ -112,7 +114,7 @@ namespace ElevatorControlSystem.Tests.Service
 
 			// Assert
 			assignerMock.Verify(a => a.Assign(request, It.IsAny<IReadOnlyList<IElevatorController>>()), Times.AtLeastOnce);
-			consoleWriterMock.Verify(c => c.Write(It.Is<string>(s => s.Contains("Assigned for Request")), 1), Times.AtLeastOnce);
+			consoleWriterMock.Verify(c => c.Write(It.Is<string>(s => s.Contains(ASSIGNMENT_FOR_REQUEST)), 1), Times.AtLeastOnce);
 			elevatorMock.Verify(e => e.AddFloorRequestAsync(It.IsAny<IReadOnlyList<ElevatorControllerRequest>>(), It.IsAny<CancellationToken>()), Times.AtLeastOnce);
 		}
 	}
