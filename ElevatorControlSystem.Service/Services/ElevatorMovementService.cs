@@ -1,4 +1,5 @@
-﻿using ElevatorControlSystem.Domain.Models;
+﻿using ElevatorControlSystem.Common.Interfaces;
+using ElevatorControlSystem.Domain.Models;
 using ElevatorControlSystem.Service.Interfaces;
 
 namespace ElevatorControlSystem.Service.Services
@@ -10,16 +11,23 @@ namespace ElevatorControlSystem.Service.Services
 	/// movement. It assumes that the caller ensures the elevator's movement is within valid floor boundaries.</remarks>
 	public class ElevatorMovementService : IElevatorMovementService
 	{
+		private readonly IElevatorConsoleWriterService _consoleWriterService;
+
+		public ElevatorMovementService(IElevatorConsoleWriterService consoleWriterService)
+		{
+			_consoleWriterService = consoleWriterService;
+		}
+
 		public void MoveUp(Elevator elevator)
 		{
 			elevator.CurrentFloor++;
-			Console.WriteLine($"[Elevator {elevator.Id}] Moving Up to floor {elevator.CurrentFloor}");
+			_consoleWriterService.Write($"[Elevator {elevator.Id}] Moving Up to floor {elevator.CurrentFloor}", elevator.Id);
 		}
 
 		public void MoveDown(Elevator elevator)
 		{
 			elevator.CurrentFloor--;
-			Console.WriteLine($"[Elevator {elevator.Id}] Moving Down to floor {elevator.CurrentFloor}");
+			_consoleWriterService.Write($"[Elevator {elevator.Id}] Moving Down to floor {elevator.CurrentFloor}", elevator.Id);
 		}
 	}
 }

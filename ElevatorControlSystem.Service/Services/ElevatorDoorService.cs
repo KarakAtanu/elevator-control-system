@@ -1,4 +1,5 @@
-﻿using ElevatorControlSystem.Domain.Models;
+﻿using ElevatorControlSystem.Common.Interfaces;
+using ElevatorControlSystem.Domain.Models;
 using ElevatorControlSystem.Service.Interfaces;
 
 namespace ElevatorControlSystem.Service.Services
@@ -10,11 +11,17 @@ namespace ElevatorControlSystem.Service.Services
 	/// that the doors remain open for a specified duration before closing.</remarks>
 	public class ElevatorDoorService : IElevatorDoorService
 	{
+		private readonly IElevatorConsoleWriterService _consoleWriterService;
+
+		public ElevatorDoorService(IElevatorConsoleWriterService consoleWriterService) 
+		{
+			_consoleWriterService = consoleWriterService;
+		}
 		public async Task OpenDoorsAsync(Elevator elevator, int doorsOpenCloseDelay, CancellationToken cancellationToken)
 		{
-			Console.WriteLine($"[Elevator {elevator.Id}] At floor {elevator.CurrentFloor} - Doors are opening");
+			_consoleWriterService.Write($"[Elevator {elevator.Id}] At floor {elevator.CurrentFloor} - Doors are opening", elevator.Id);
 			await Task.Delay(doorsOpenCloseDelay, cancellationToken);
-			Console.WriteLine($"[Elevator {elevator.Id}] At floor {elevator.CurrentFloor} - Doors are closing");
+			_consoleWriterService.Write($"[Elevator {elevator.Id}] At floor {elevator.CurrentFloor} - Doors are closing", elevator.Id);
 		}
 	}
 }

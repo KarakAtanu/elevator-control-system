@@ -1,4 +1,5 @@
-﻿using ElevatorControlSystem.Common.Settings;
+﻿using ElevatorControlSystem.Common.Interfaces;
+using ElevatorControlSystem.Common.Settings;
 using ElevatorControlSystem.Domain.Models;
 using ElevatorControlSystem.Domain.Models.Enums;
 using ElevatorControlSystem.Service.Interfaces;
@@ -26,19 +27,22 @@ namespace ElevatorControlSystem.Service.Services
 		private readonly IRequestValidator _validator;
 		private readonly IElevatorAssigner _elevatorAssigner;
 		private readonly IRequestQueueManager _queueManager;
+		private readonly IElevatorConsoleWriterService _consoleWriterService;
 		private readonly SemaphoreSlim _semaphore = new(NUMBER_OF_CONCURRENT_TASKS);
 		public ElevatorCentralProcessor(IOptions<ElevatorSettings> options,
 										 IElevatorControllerFactory controllerFactory,
 										 IRequestValidator validator,
 										 IElevatorAssigner elevatorAssigner,
-										 IRequestQueueManager queueManager)
+										 IRequestQueueManager queueManager,
+										 IElevatorConsoleWriterService consoleWriterService)
 		{
 			_settings = options.Value;
 			_validator = validator;
 			_elevatorAssigner = elevatorAssigner;
 			_queueManager = queueManager;
-			_elevatorControllers = controllerFactory.CreateControllers(_settings);
+			_consoleWriterService = consoleWriterService;
 
+			_elevatorControllers = controllerFactory.CreateControllers(_settings);
 			_workers.Add(Task.Run(() => ProcessQueueAsync(_cts.Token)));
 		}
 
@@ -85,7 +89,7 @@ namespace ElevatorControlSystem.Service.Services
 				return;
 			}
 
-			Console.WriteLine($"[Elevator {elevator.Id}] Assigned for Request: [{request.Floor}] -> [{request.DestinationFloor}] -> [{request.Direction}]");
+			_consoleWriterService.Write($"[Elevator {elevator.Id}] Assigned for Request: [{request.Floor}] -> [{request.DestinationFloor}] -> [{request.Direction}]", elevator.Id);
 			
 			var internalRequests = GenerateInternalRequestsForController(request, elevator);
 			await elevator.AddFloorRequestAsync(internalRequests, cancellationToken);

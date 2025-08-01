@@ -1,4 +1,6 @@
-﻿using ElevatorControlSystem.Common.Settings;
+﻿using ElevatorControlSystem.Common.Interfaces;
+using ElevatorControlSystem.Common.Services;
+using ElevatorControlSystem.Common.Settings;
 using ElevatorControlSystem.Infrastructure.Interfaces;
 using ElevatorControlSystem.Infrastructure.Services;
 using ElevatorControlSystem.Service.Interfaces;
@@ -17,6 +19,7 @@ services.Configure<ElevatorSettings>(configuration.GetSection(nameof(ElevatorSet
 
 services.AddSingleton<IElevatorCentralProcessor, ElevatorCentralProcessor>();
 services.AddSingleton<IElevatorRequestSimulator, ElevatorRequestSimulator>();
+services.AddSingleton<IElevatorConsoleWriterService, ElevatorConsoleWriterService>();
 services.AddScoped<IElevatorController, ElevatorController>();
 services.AddScoped<IRequestQueueManager, RequestQueueManager>();
 services.AddTransient<IElevatorControllerFactory, ElevatorControllerFactory>();

@@ -1,4 +1,4 @@
-﻿using System.Threading;
+﻿using ElevatorControlSystem.Common.Interfaces;
 using ElevatorControlSystem.Common.Settings;
 using ElevatorControlSystem.Domain.Models.Enums;
 using ElevatorControlSystem.Infrastructure.Interfaces;
@@ -18,14 +18,19 @@ namespace ElevatorControlSystem.Infrastructure.Services
 	public class ElevatorRequestSimulator : IElevatorRequestSimulator
 	{
 		private readonly IElevatorCentralProcessor _processor;
+		private readonly IElevatorConsoleWriterService _consoleWriterService;
 		private readonly Random _random = new();
 		private readonly int _minFloor;
 		private readonly int _maxFloor;
 		private readonly int _delayBetweenUserActions;
 
-		public ElevatorRequestSimulator(IElevatorCentralProcessor processor, IOptions<ElevatorSettings> options)
+		public ElevatorRequestSimulator(
+			IElevatorCentralProcessor processor,
+			IOptions<ElevatorSettings> options,
+			IElevatorConsoleWriterService consoleWriterService)
 		{
 			_processor = processor;
+			_consoleWriterService = consoleWriterService;
 			_minFloor = options.Value.MinFloor;
 			_maxFloor = options.Value.MaxFloor;
 			_delayBetweenUserActions = options.Value.BetweenUserActionsDelay;
@@ -38,7 +43,7 @@ namespace ElevatorControlSystem.Infrastructure.Services
 				while (!token.IsCancellationRequested)
 				{
 					var request = GenerateRandomRequest();
-					Console.WriteLine($"[User Action] {request.Floor} --> {request.DestinationFloor} [{request.Direction}]");
+					_consoleWriterService.Write($"[User Action] Floor {request.Floor} --> Floor {request.DestinationFloor} [{request.Direction}]");
 					_processor.HandleRequest(request);
 
 					await Task.Delay(_delayBetweenUserActions, token);
@@ -50,7 +55,7 @@ namespace ElevatorControlSystem.Infrastructure.Services
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Exception in {nameof(ElevatorRequestSimulator)}.{nameof(RunAsync)}: {ex.Message}");
+				_consoleWriterService.Write($"Error in {nameof(ElevatorRequestSimulator)}.{nameof(RunAsync)}: {ex.Message}");
 			}
 		}
 

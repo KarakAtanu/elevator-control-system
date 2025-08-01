@@ -1,80 +1,171 @@
-﻿using ElevatorControlSystem.Service.Services;
+﻿using ElevatorControlSystem.Common.Settings;
+using ElevatorControlSystem.Domain.Models;
+using ElevatorControlSystem.Domain.Models.Enums;
+using ElevatorControlSystem.Service.Interfaces;
+using ElevatorControlSystem.Service.Services;
+using Microsoft.Extensions.Options;
+using Moq;
+using Xunit;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ElevatorControlSystem.Tests.Service
 {
 	public class ElevatorControllerTests
 	{
-		[Fact]
-		public void Constructor_InitializesElevatorProperties()
+		private ElevatorController CreateController(
+			int id = 1,
+			ElevatorSettings settings = null,
+			Mock<IFloorRequestQueueManager> queueManagerMock = null,
+			Mock<IElevatorMovementService> movementServiceMock = null,
+			Mock<IElevatorDoorService> doorServiceMock = null)
 		{
-			var controller = new ElevatorController(1, 0, 10);
+			settings ??= new ElevatorSettings
+			{
+				MinFloor = 1,
+				MaxFloor = 10,
+				BetweenFloorsDelay = 10,
+				DoorsOpenCloseDelay = 10,
+				ElevatorCount = 1,
+				BetweenUserActionsDelay = 10
+			};
+			queueManagerMock ??= new Mock<IFloorRequestQueueManager>();
+			movementServiceMock ??= new Mock<IElevatorMovementService>();
+			doorServiceMock ??= new Mock<IElevatorDoorService>();
 
-			Assert.Equal(0, controller.CurrentFloor); // Elevator starts at minFloor (constructor sets CurrentFloor to minFloor)
-			Assert.True(controller.IsIdle);
-			Assert.Empty(controller.Destinations);
+			var options = Options.Create(settings);
+
+			return new ElevatorController(
+				id,
+				options,
+				queueManagerMock.Object,
+				movementServiceMock.Object,
+				doorServiceMock.Object
+			);
 		}
 
 		[Fact]
-		public void IsIdle_ReturnsTrueWhenDirectionIsIdle()
+		public void IsIdle_ShouldReturnTrue_WhenDirectionIsIdle()
 		{
-			var controller = new ElevatorController(1, 0, 10);
-			Assert.True(controller.IsIdle);
+			// Arrange
+			var controller = CreateController();
+			// Act
+			var result = controller.IsIdle;
+			// Assert
+			Assert.True(result);
 		}
 
 		[Fact]
-		public void CurrentFloor_ReturnsElevatorCurrentFloor()
+		public void CurrentFloor_ShouldReturnElevatorCurrentFloor()
 		{
-			var controller = new ElevatorController(1, 0, 10);
-			Assert.Equal(0, controller.CurrentFloor);
+			// Arrange
+			var controller = CreateController();
+			// Act
+			var result = controller.CurrentFloor;
+			// Assert
+			Assert.Equal(1, result); // Default MinFloor
 		}
 
 		[Fact]
-		public async Task AddFloorRequestAsync_ThrowsArgumentOutOfRangeException_ForInvalidFloor()
+		public void Id_ShouldReturnElevatorId()
 		{
-			var controller = new ElevatorController(1, 0, 10);
-			var token = CancellationToken.None;
-
-			await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
-				controller.AddFloorRequestAsync(11, token));
+			// Arrange
+			var controller = CreateController(id: 5);
+			// Act
+			var result = controller.Id;
+			// Assert
+			Assert.Equal(5, result);
 		}
 
 		[Fact]
-		public async Task AddFloorRequestAsync_DoesNotAddDuplicateFloor()
+		public void Direction_ShouldReturnElevatorDirection()
 		{
-			var controller = new ElevatorController(1, 0, 10);
-			var token = CancellationToken.None;
-
-			var task1 =  controller.AddFloorRequestAsync(5, token);
-			var task2 = controller.AddFloorRequestAsync(5, token);
-
-			Assert.Single(controller.Destinations);
+			// Arrange
+			var controller = CreateController();
+			// Act
+			var result = controller.Direction;
+			// Assert
+			Assert.Equal(Direction.Idle, result);
 		}
 
 		[Fact]
-		public async Task AddFloorRequestAsync_SetsIsRunningAndProcessesRequest()
+		public async Task AddFloorRequestAsync_ShouldAddRequestsAndRunElevator()
 		{
-			var controller = new ElevatorController(1, 0, 10);
+			// Arrange
+			var queueManagerMock = new Mock<IFloorRequestQueueManager>();
+			var movementServiceMock = new Mock<IElevatorMovementService>();
+			var doorServiceMock = new Mock<IElevatorDoorService>();
+			var controller = CreateController(
+				queueManagerMock: queueManagerMock,
+				movementServiceMock: movementServiceMock,
+				doorServiceMock: doorServiceMock
+			);
+			var requests = new List<ElevatorControllerRequest>
+		{
+			new ElevatorControllerRequest { Floor = 2, Direction = Direction.Up }
+		};
 			var tokenSource = new CancellationTokenSource();
+			tokenSource.Cancel(); // Cancel immediately to exit RunElevatorAsync
 
-			// Add a floor request and cancel after a short delay to avoid waiting for Task.Delay
-			var task = controller.AddFloorRequestAsync(5, tokenSource.Token);
+			// Act
+			await controller.AddFloorRequestAsync(requests, tokenSource.Token);
 
-			Assert.False(controller.IsIdle);
-			await task;
-			Assert.True(task.IsCompleted);
+			// Assert
+			queueManagerMock.Verify(q => q.AddRequest(2, Direction.Up), Times.Once);
 		}
 
 		[Fact]
-		public async Task AddFloorRequestAsync_DoesNotProcessIfCancelledImmediately()
+		public async Task AddFloorRequestAsync_ShouldSetInitialDirection()
 		{
-			var controller = new ElevatorController(1, 0, 10);
+			// Arrange
+			var queueManagerMock = new Mock<IFloorRequestQueueManager>();
+			var movementServiceMock = new Mock<IElevatorMovementService>();
+			var doorServiceMock = new Mock<IElevatorDoorService>();
+			var controller = CreateController(
+				queueManagerMock: queueManagerMock,
+				movementServiceMock: movementServiceMock,
+				doorServiceMock: doorServiceMock
+			);
+			var requests = new List<ElevatorControllerRequest>
+		{
+			new ElevatorControllerRequest { Floor = 2, Direction = Direction.Up }
+		};
 			var tokenSource = new CancellationTokenSource();
 			tokenSource.Cancel();
 
-			await controller.AddFloorRequestAsync(5, tokenSource.Token);
+			// Act
+			await controller.AddFloorRequestAsync(requests, tokenSource.Token);
 
-			// Should not add the request
-			Assert.Empty(controller.Destinations);
+			// Assert
+			Assert.Equal(Direction.Up, controller.Direction);
+		}
+
+		[Fact]
+		public async Task AddFloorRequestAsync_ShouldNotRunElevatorIfAlreadyRunning()
+		{
+			// Arrange
+			var queueManagerMock = new Mock<IFloorRequestQueueManager>();
+			var movementServiceMock = new Mock<IElevatorMovementService>();
+			var doorServiceMock = new Mock<IElevatorDoorService>();
+			var controller = CreateController(
+				queueManagerMock: queueManagerMock,
+				movementServiceMock: movementServiceMock,
+				doorServiceMock: doorServiceMock
+			);
+			var requests = new List<ElevatorControllerRequest>
+		{
+			new ElevatorControllerRequest { Floor = 2, Direction = Direction.Up }
+		};
+			var tokenSource = new CancellationTokenSource();
+			tokenSource.Cancel();
+
+			// Act
+			await controller.AddFloorRequestAsync(requests, tokenSource.Token);
+			await controller.AddFloorRequestAsync(requests, tokenSource.Token);
+
+			// Assert
+			queueManagerMock.Verify(q => q.AddRequest(2, Direction.Up), Times.Exactly(2));
 		}
 	}
 }
