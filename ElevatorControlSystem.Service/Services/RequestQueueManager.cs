@@ -13,7 +13,7 @@ namespace ElevatorControlSystem.Service.Services
 	public class RequestQueueManager : IRequestQueueManager
 	{
 		private readonly ConcurrentQueue<ElevatorRequest> _queue = new();
-		
+
 		public void Enqueue(ElevatorRequest request)
 		{
 			_queue.Enqueue(request);

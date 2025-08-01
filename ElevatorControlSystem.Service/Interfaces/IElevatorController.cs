@@ -1,5 +1,4 @@
-﻿using System.Collections.Immutable;
-using ElevatorControlSystem.Domain.Models;
+﻿using ElevatorControlSystem.Domain.Models;
 using ElevatorControlSystem.Domain.Models.Enums;
 
 namespace ElevatorControlSystem.Service.Interfaces
@@ -10,6 +9,6 @@ namespace ElevatorControlSystem.Service.Interfaces
 		int CurrentFloor { get; }
 		int Id { get; }
 		Direction Direction { get; }
-		Task AddFloorRequestAsync(IReadOnlyList<ElevatorControllerRequest> floorRequests, CancellationToken cancellationToken);	
+		Task AddFloorRequestAsync(IReadOnlyList<ElevatorControllerRequest> floorRequests, CancellationToken cancellationToken);
 	}
 }

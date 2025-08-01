@@ -29,7 +29,7 @@ namespace ElevatorControlSystem.Common.Services
 		public void Write(string message, int? elevatorId = null)
 		{
 			var containsElevator = message.Contains("[Elevator", StringComparison.OrdinalIgnoreCase);
-			var containsError = message.Contains("Error in", StringComparison.OrdinalIgnoreCase);
+			var containsError = message.Contains("Error", StringComparison.OrdinalIgnoreCase);
 
 			if (containsElevator && elevatorId.HasValue)
 			{

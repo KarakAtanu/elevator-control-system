@@ -19,7 +19,7 @@ namespace ElevatorControlSystem.Service.Services
 	public class ElevatorCentralProcessor : IElevatorCentralProcessor
 	{
 		private const int NUMBER_OF_CONCURRENT_TASKS = 5;
-		
+
 		private readonly CancellationTokenSource _cts = new();
 		private readonly List<Task> _workers = [];
 		private readonly List<IElevatorController> _elevatorControllers;
@@ -50,7 +50,7 @@ namespace ElevatorControlSystem.Service.Services
 		{
 			if (!_validator.IsValid(request))
 			{
-				Console.WriteLine("Invalid elevator request.");
+				_consoleWriterService.Write("Error: Invalid elevator request.");
 				return;
 			}
 
@@ -90,7 +90,7 @@ namespace ElevatorControlSystem.Service.Services
 			}
 
 			_consoleWriterService.Write($"[Elevator {elevator.Id}] Assigned for Request: [{request.Floor}] -> [{request.DestinationFloor}] -> [{request.Direction}]", elevator.Id);
-			
+
 			var internalRequests = GenerateInternalRequestsForController(request, elevator);
 			await elevator.AddFloorRequestAsync(internalRequests, cancellationToken);
 		}

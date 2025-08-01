@@ -45,7 +45,7 @@ namespace ElevatorControlSystem.Service.Services
 		}
 
 		private static IEnumerable<IElevatorController> GetIdleElevators(ElevatorRequest request,
-																   IReadOnlyList<IElevatorController> elevatorControllers) => 
+																   IReadOnlyList<IElevatorController> elevatorControllers) =>
 							elevatorControllers
 							.Where(e => e.Direction == Direction.Idle)
 							.OrderBy(e => Math.Abs(request.Floor - e.CurrentFloor));

@@ -16,7 +16,7 @@ namespace ElevatorControlSystem.Service.Services
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IOptions<ElevatorSettings> _options;
 
-		public ElevatorControllerFactory(IServiceProvider serviceProvider, IOptions<ElevatorSettings> options)	
+		public ElevatorControllerFactory(IServiceProvider serviceProvider, IOptions<ElevatorSettings> options)
 		{
 			_serviceProvider = serviceProvider;
 			_options = options;

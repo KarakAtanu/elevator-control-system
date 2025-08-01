@@ -13,7 +13,7 @@ namespace ElevatorControlSystem.Service.Services
 	{
 		private readonly IElevatorConsoleWriterService _consoleWriterService;
 
-		public ElevatorDoorService(IElevatorConsoleWriterService consoleWriterService) 
+		public ElevatorDoorService(IElevatorConsoleWriterService consoleWriterService)
 		{
 			_consoleWriterService = consoleWriterService;
 		}

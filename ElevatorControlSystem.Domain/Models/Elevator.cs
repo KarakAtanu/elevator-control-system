@@ -20,5 +20,5 @@ namespace ElevatorControlSystem.Domain.Models
 		}
 
 		public static Elevator Create(int id, int minFloor, int maxFloor) => new(id, minFloor, maxFloor);
-	}	
+	}
 }
